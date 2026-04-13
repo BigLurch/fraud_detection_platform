@@ -1,0 +1,62 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+
+# Artifacts
+artifacts/models/*
+artifacts/metrics/*
+artifacts/reports/*
+artifacts/logs/*
+
+# Keep folder structure
+!artifacts/models/.gitkeep
+!artifacts/metrics/.gitkeep
+!artifacts/reports/.gitkeep
+!artifacts/logs/.gitkeep
+
+# Data
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/samples/.gitkeep
+
+# MLflow
+mlruns/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Streamlit
+.streamlit/
+
+# Temporary files
+*.tmp
+*.log

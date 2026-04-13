@@ -1,0 +1,42 @@
+project:
+  name: fraud_detection_platform
+  random_seed: 42
+
+data:
+  raw_data_path: data/raw/synthetic_transactions.csv
+  train_data_path: data/processed/train.csv
+  test_data_path: data/processed/test.csv
+  reference_data_path: data/processed/reference.csv
+  target_column: is_fraud
+  test_size: 0.2
+
+artifacts:
+  model_path: artifacts/models/fraud_model.joblib
+  metrics_path: artifacts/metrics/train_metrics.json
+  prediction_log_path: artifacts/logs/predictions.jsonl
+  evidently_report_path: artifacts/reports/evidently_report.html
+
+mlflow:
+  tracking_uri: file:./mlruns
+  experiment_name: fraud_detection_experiments
+
+model:
+  name: random_forest
+  n_estimators: 200
+  max_depth: 10
+  min_samples_split: 5
+  min_samples_leaf: 2
+  class_weight: balanced
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  model_path: artifacts/models/fraud_model.joblib
+
+ui:
+  api_url: http://127.0.0.1:8000/predict
+
+monitoring:
+  reference_path: data/processed/reference.csv
+  current_data_path: artifacts/logs/predictions.jsonl
+  report_path: artifacts/reports/evidently_report.html

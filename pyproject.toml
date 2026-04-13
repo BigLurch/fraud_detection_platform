@@ -1,0 +1,22 @@
+[project]
+name = "fraud-detection-platform"
+version = "0.1.0"
+description = "An end-to-end MLOps portfolio project for fraud detection with MLflow, FastAPI, Streamlit, logging, and Evidently monitoring."
+requires-python = ">=3.11,<3.12"
+readme = "README.md"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = []
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
