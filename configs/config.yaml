@@ -16,9 +16,9 @@ artifacts:
   prediction_log_path: artifacts/logs/predictions.jsonl
   evidently_report_path: artifacts/reports/evidently_report.html
 
-mlflow:
-  tracking_uri: file:./mlruns
-  experiment_name: fraud_detection_experiments
+# mlflow:
+#   tracking_uri: file:./mlruns
+#   experiment_name: fraud_detection_experiments
 
 model:
   name: random_forest
