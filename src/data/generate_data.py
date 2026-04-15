@@ -1,3 +1,9 @@
+# Generates a synthetic fraud detection dataset for a modern payment platform.
+
+# This module simulates legitimate customer transactions, synthetic account abuse,
+# and suspicious payment behavior using controlled probabilistic patterns.
+# The output dataset is used for model training, experimentation, and testing.
+
 from __future__ import annotations
 
 import random

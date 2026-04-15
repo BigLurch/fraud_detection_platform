@@ -1,3 +1,9 @@
+# Defines the dataset schema for the fraud detection platform.
+
+# This module contains the feature groups, target column, ID columns,
+# and complete column structure used across data generation, preprocessing,
+# model training, API inference, and monitoring pipelines.
+
 from dataclasses import dataclass
 from typing import List
 

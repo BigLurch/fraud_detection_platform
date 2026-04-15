@@ -1,43 +1,140 @@
 # Fraud Detection Platform
 
-An end-to-end MLOps portfolio project that simulates fraudulent transactions and fake accounts, trains a fraud detection model, serves predictions through FastAPI, provides a Streamlit user interface, logs predictions, and monitors data drift with Evidently.
+An end-to-end MLOps portfolio project that simulates fraud activity in a modern digital payment platform.
 
-## Project goal
+The system generates synthetic transactions and fake accounts, trains a machine learning model to detect fraud, serves predictions through FastAPI, provides a Streamlit dashboard, logs predictions, and monitors model/data drift over time.
 
-The goal of this project is to build a production-inspired fraud detection platform that demonstrates practical skills in:
+---
 
-- machine learning
-- feature engineering
-- experiment tracking
-- model versioning
-- API development
-- testing
-- monitoring
-- containerization
+# Project Vision
 
-This project is designed as a strong portfolio case for roles in:
+This project is designed to feel like a real fraud prevention product used in a modern checkout or payment environment.
 
-- MLOps Engineering
-- ML Engineering
-- AI Engineering
+It combines two perspectives:
 
-## Planned architecture
+## Payment Platform
 
-The platform will include:
+* customer transactions
+* payment risk scoring
+* account abuse prevention
+* real-time fraud checks
 
-- synthetic fraud data generation
-- preprocessing and feature engineering
-- model training in Python
-- experiment tracking with MLflow
-- saved model artifacts
-- inference API with FastAPI
-- Streamlit demo UI
-- prediction logging
-- monitoring with Evidently
-- Docker support
-- automated tests
+## Fraud Intelligence Dashboard
 
-## Project structure
+* suspicious activity alerts
+* transaction monitoring
+* risk trends
+* geolocation visualizations
+* model health monitoring
+
+---
+
+# Current Development Status
+
+## Completed
+
+### Project Foundation
+
+* professional project structure
+* uv virtual environment setup
+* modular Python package layout
+* config-driven architecture
+
+### Synthetic Data Engine
+
+* realistic payment transaction simulation
+* legitimate customer behavior patterns
+* synthetic / fake account abuse scenarios
+* suspicious purchase behavior
+* fraud labels for supervised learning
+
+### Data Quality Layer
+
+* schema definition
+* dataset validation checks
+* null / duplicate / range validation
+
+### Feature Engineering
+
+Created model-ready features such as:
+
+* amount_to_avg_ratio
+* is_night_transaction
+* high_velocity_flag
+* new_account_flag
+* risky_email_domain
+* foreign_high_amount_flag
+* login_risk_flag
+
+---
+
+# Planned Next Steps
+
+## Machine Learning Pipeline
+
+* preprocessing pipeline
+* train / test split
+* RandomForest baseline model
+* model evaluation
+* saved artifacts
+
+## MLOps Layer
+
+* MLflow experiment tracking
+* model versioning
+* inference logging
+* Evidently monitoring
+
+## Serving Layer
+
+* FastAPI prediction API
+* batch inference endpoint
+* health checks
+
+## UI Dashboard
+
+* Streamlit fraud console
+* live prediction view
+* recent alerts
+* world fraud activity map
+* model monitoring panel
+
+## Deployment
+
+* Docker
+* docker-compose
+* GitHub Actions CI
+
+---
+
+# Example Use Cases
+
+The model will learn to detect scenarios such as:
+
+* new account making large foreign purchase
+* multiple failed login attempts followed by payment
+* synthetic identity using risky email domain
+* sudden high-value purchase outside normal behavior
+* high velocity transactions in short timeframe
+
+---
+
+# Tech Stack
+
+* Python 3.11
+* pandas
+* numpy
+* scikit-learn
+* FastAPI
+* Streamlit
+* MLflow
+* Evidently
+* pytest
+* Docker
+
+---
+
+# Repository Structure
 
 ```text
 fraud_detection_platform/
@@ -49,46 +146,15 @@ fraud_detection_platform/
 ├── scripts/
 ├── src/
 ├── tests/
-├── requirements.txt
-├── pyproject.toml
 └── README.md
 ```
 
-## Initial MVP scope
+# Why This Project Matters
 
-The first MVP version will support:
-* generation of synthetic transaction data
-* fake and legitimate account patterns
-* fraud classification model training
-* single prediction through API
-* prediction display in Streamlit
-* prediction logging to file
-* drift monitoring report generation
+This project demonstrates practical skills for roles such as:
+* MLOps Engineer
+* Machine Learning Engineer
+* AI Engineer
+* Data / ML Platform Engineer
 
-## Tech stack
-* Python 3.11
-* pandas
-* numpy
-* scikit-learn
-* MLflow
-* FastAPI
-* Streamlit
-* Evidently
-* pytest
-* Docker
-
-## Status
-Project setup in progress.
-
-Next step:
-* build synthetic transaction and fake account data generator
-
-## Future improvements
-
-Possible future extensions:
-* batch inference endpoint
-* model registry integration
-* CI/CD pipeline
-* Prometheus/Grafana metrics
-* cloud deployment
-* feature store simulation# fraud_detection_platform
+It focuses not only on model training, but on the full lifecycle of machine learning systems.
