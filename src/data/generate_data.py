@@ -66,14 +66,20 @@ def pick_country(is_fraud: bool) -> str:
 
 
 def generate_legit_profile() -> dict:
-    user_age = int(np.clip(np.random.normal(35, 10), 18, 75))
-    account_age_days = int(np.clip(np.random.normal(420, 250), 30, 2500))
-    avg_transaction_amount_7d = float(np.clip(np.random.normal(850, 350), 80, 5000))
-    transaction_amount = float(np.clip(np.random.normal(avg_transaction_amount_7d, 300), 30, 7000))
-    transaction_hour = int(np.clip(np.random.normal(14, 5), 0, 23))
-    ip_risk_score = float(np.clip(np.random.normal(0.18, 0.10), 0.01, 0.75))
-    num_prev_transactions_24h = int(np.clip(np.random.poisson(2), 0, 8))
-    failed_login_attempts_24h = int(np.clip(np.random.poisson(0.4), 0, 3))
+    user_age = int(np.clip(np.random.normal(34, 11), 18, 75))
+    account_age_days = int(np.clip(np.random.normal(300, 240), 5, 2500))
+    avg_transaction_amount_7d = float(np.clip(np.random.normal(950, 500), 50, 6000))
+    transaction_amount = float(
+        np.clip(
+            np.random.normal(avg_transaction_amount_7d * random.uniform(0.7, 1.5), 700),
+            20,
+            12000,
+        )
+    )
+    transaction_hour = int(np.clip(np.random.normal(15, 6), 0, 23))
+    ip_risk_score = float(np.clip(np.random.normal(0.28, 0.18), 0.01, 0.95))
+    num_prev_transactions_24h = int(np.clip(np.random.poisson(2.5), 0, 10))
+    failed_login_attempts_24h = int(np.clip(np.random.poisson(0.8), 0, 5))
 
     return {
         "user_age": user_age,
@@ -84,7 +90,11 @@ def generate_legit_profile() -> dict:
         "num_prev_transactions_24h": num_prev_transactions_24h,
         "avg_transaction_amount_7d": round(avg_transaction_amount_7d, 2),
         "failed_login_attempts_24h": failed_login_attempts_24h,
-        "email_domain": pick_email_domain(is_synthetic=False),
+        "email_domain": random.choices(
+            ["gmail.com", "outlook.com", "icloud.com", "hotmail.com", "tempmail.io"],
+            weights=[0.34, 0.26, 0.18, 0.18, 0.04],
+            k=1,
+        )[0],
         "device_type": random.choices(
             ["mobile", "desktop", "tablet"],
             weights=[0.55, 0.35, 0.10],
@@ -92,49 +102,59 @@ def generate_legit_profile() -> dict:
         )[0],
         "payment_method": random.choices(
             ["card", "apple_pay", "google_pay", "bank_transfer"],
-            weights=[0.55, 0.20, 0.15, 0.10],
+            weights=[0.52, 0.20, 0.16, 0.12],
             k=1,
         )[0],
-        "country": pick_country(is_fraud=False),
-        "is_foreign_transaction": random.choices(["no", "yes"], weights=[0.92, 0.08], k=1)[0],
-        "shipping_billing_mismatch": random.choices(["no", "yes"], weights=[0.94, 0.06], k=1)[0],
-        "kyc_completed": random.choices(["yes", "no"], weights=[0.96, 0.04], k=1)[0],
-        "has_chargeback_history": random.choices(["no", "yes"], weights=[0.93, 0.07], k=1)[0],
-        "is_synthetic_account": "no",
+        "country": random.choices(
+            ["Sweden", "Norway", "Denmark", "Finland", "Germany", "Netherlands", "Poland"],
+            weights=[0.34, 0.14, 0.10, 0.10, 0.14, 0.12, 0.06],
+            k=1,
+        )[0],
+        "is_foreign_transaction": random.choices(["no", "yes"], weights=[0.82, 0.18], k=1)[0],
+        "shipping_billing_mismatch": random.choices(["no", "yes"], weights=[0.86, 0.14], k=1)[0],
+        "kyc_completed": random.choices(["yes", "no"], weights=[0.92, 0.08], k=1)[0],
+        "has_chargeback_history": random.choices(["no", "yes"], weights=[0.87, 0.13], k=1)[0],
+        "is_synthetic_account": random.choices(["no", "yes"], weights=[0.97, 0.03], k=1)[0],
     }
 
-
 def generate_fraud_profile() -> dict:
-    synthetic_account = random.choices(["yes", "no"], weights=[0.65, 0.35], k=1)[0]
-    account_takeover_pattern = synthetic_account == "no"
+    synthetic_account = random.choices(["yes", "no"], weights=[0.55, 0.45], k=1)[0]
 
     if synthetic_account == "yes":
-        user_age = int(np.clip(np.random.normal(27, 8), 18, 60))
-        account_age_days = int(np.clip(np.random.normal(18, 12), 1, 90))
-        avg_transaction_amount_7d = float(np.clip(np.random.normal(550, 220), 50, 2500))
-        transaction_amount = float(np.clip(np.random.normal(3800, 2200), 250, 15000))
-        failed_login_attempts_24h = int(np.clip(np.random.poisson(2), 0, 8))
-        num_prev_transactions_24h = int(np.clip(np.random.poisson(6), 1, 20))
-        ip_risk_score = float(np.clip(np.random.normal(0.78, 0.15), 0.35, 1.00))
-        transaction_hour = random.choice([0, 1, 2, 3, 4, 22, 23])
-        email_domain = pick_email_domain(is_synthetic=True)
-        kyc_completed = random.choices(["no", "yes"], weights=[0.75, 0.25], k=1)[0]
-        has_chargeback_history = random.choices(["yes", "no"], weights=[0.55, 0.45], k=1)[0]
-        is_foreign_transaction = random.choices(["yes", "no"], weights=[0.80, 0.20], k=1)[0]
-        shipping_billing_mismatch = random.choices(["yes", "no"], weights=[0.70, 0.30], k=1)[0]
+        user_age = int(np.clip(np.random.normal(29, 9), 18, 65))
+        account_age_days = int(np.clip(np.random.normal(45, 45), 1, 240))
+        avg_transaction_amount_7d = float(np.clip(np.random.normal(700, 350), 40, 4000))
+        transaction_amount = float(np.clip(np.random.normal(3200, 2200), 50, 14000))
+        failed_login_attempts_24h = int(np.clip(np.random.poisson(1.8), 0, 7))
+        num_prev_transactions_24h = int(np.clip(np.random.poisson(4.5), 0, 15))
+        ip_risk_score = float(np.clip(np.random.normal(0.62, 0.20), 0.05, 1.00))
+        transaction_hour = random.randint(0, 23)
+        email_domain = random.choices(
+            ["tempmail.io", "fastmailbox.net", "quickdrop.cc", "burnermail.xyz", "gmail.com", "outlook.com"],
+            weights=[0.20, 0.16, 0.14, 0.10, 0.22, 0.18],
+            k=1,
+        )[0]
+        kyc_completed = random.choices(["no", "yes"], weights=[0.60, 0.40], k=1)[0]
+        has_chargeback_history = random.choices(["yes", "no"], weights=[0.45, 0.55], k=1)[0]
+        is_foreign_transaction = random.choices(["yes", "no"], weights=[0.60, 0.40], k=1)[0]
+        shipping_billing_mismatch = random.choices(["yes", "no"], weights=[0.55, 0.45], k=1)[0]
     else:
-        user_age = int(np.clip(np.random.normal(38, 10), 18, 75))
-        account_age_days = int(np.clip(np.random.normal(620, 350), 60, 2500))
-        avg_transaction_amount_7d = float(np.clip(np.random.normal(900, 300), 100, 4000))
-        transaction_amount = float(np.clip(np.random.normal(5200, 2500), 300, 18000))
-        failed_login_attempts_24h = int(np.clip(np.random.poisson(4), 1, 10))
-        num_prev_transactions_24h = int(np.clip(np.random.poisson(4), 1, 15))
-        ip_risk_score = float(np.clip(np.random.normal(0.67, 0.18), 0.20, 1.00))
-        transaction_hour = random.choice([0, 1, 2, 3, 4, 23])
-        email_domain = pick_email_domain(is_synthetic=False)
-        kyc_completed = "yes"
-        has_chargeback_history = random.choices(["yes", "no"], weights=[0.30, 0.70], k=1)[0]
-        is_foreign_transaction = random.choices(["yes", "no"], weights=[0.72, 0.28], k=1)[0]
+        user_age = int(np.clip(np.random.normal(36, 11), 18, 75))
+        account_age_days = int(np.clip(np.random.normal(380, 300), 10, 2500))
+        avg_transaction_amount_7d = float(np.clip(np.random.normal(950, 450), 50, 5000))
+        transaction_amount = float(np.clip(np.random.normal(2600, 1900), 40, 15000))
+        failed_login_attempts_24h = int(np.clip(np.random.poisson(2.5), 0, 8))
+        num_prev_transactions_24h = int(np.clip(np.random.poisson(3.5), 0, 12))
+        ip_risk_score = float(np.clip(np.random.normal(0.55, 0.22), 0.05, 1.00))
+        transaction_hour = random.randint(0, 23)
+        email_domain = random.choices(
+            ["gmail.com", "outlook.com", "icloud.com", "hotmail.com", "tempmail.io"],
+            weights=[0.28, 0.24, 0.18, 0.16, 0.14],
+            k=1,
+        )[0]
+        kyc_completed = random.choices(["yes", "no"], weights=[0.80, 0.20], k=1)[0]
+        has_chargeback_history = random.choices(["yes", "no"], weights=[0.35, 0.65], k=1)[0]
+        is_foreign_transaction = random.choices(["yes", "no"], weights=[0.55, 0.45], k=1)[0]
         shipping_billing_mismatch = random.choices(["yes", "no"], weights=[0.45, 0.55], k=1)[0]
 
     return {
@@ -149,22 +169,25 @@ def generate_fraud_profile() -> dict:
         "email_domain": email_domain,
         "device_type": random.choices(
             ["mobile", "desktop", "tablet"],
-            weights=[0.45, 0.45, 0.10],
+            weights=[0.48, 0.40, 0.12],
             k=1,
         )[0],
         "payment_method": random.choices(
             ["card", "apple_pay", "google_pay", "bank_transfer"],
-            weights=[0.72, 0.08, 0.05, 0.15],
+            weights=[0.60, 0.14, 0.10, 0.16],
             k=1,
         )[0],
-        "country": pick_country(is_fraud=True),
+        "country": random.choices(
+            ["Sweden", "Norway", "Denmark", "Finland", "Germany", "Netherlands", "Poland", "Romania", "Nigeria", "Turkey"],
+            weights=[0.14, 0.08, 0.06, 0.06, 0.10, 0.08, 0.16, 0.12, 0.10, 0.10],
+            k=1,
+        )[0],
         "is_foreign_transaction": is_foreign_transaction,
         "shipping_billing_mismatch": shipping_billing_mismatch,
         "kyc_completed": kyc_completed,
         "has_chargeback_history": has_chargeback_history,
-        "is_synthetic_account": synthetic_account if not account_takeover_pattern else "no",
+        "is_synthetic_account": synthetic_account,
     }
-
 
 def create_dataset(
     n_samples: int = N_SAMPLES,
