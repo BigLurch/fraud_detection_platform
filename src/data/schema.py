@@ -15,6 +15,7 @@ class FraudDatasetSchema:
     numerical_features: List[str] = None
     categorical_features: List[str] = None
     id_columns: List[str] = None
+    metadata_columns: List[str] = None
     all_columns: List[str] = None
 
     def __post_init__(self):
@@ -45,7 +46,6 @@ class FraudDatasetSchema:
                 "shipping_billing_mismatch",
                 "kyc_completed",
                 "has_chargeback_history",
-                "is_synthetic_account",
             ],
         )
 
@@ -60,10 +60,19 @@ class FraudDatasetSchema:
 
         object.__setattr__(
             self,
+            "metadata_columns",
+            [
+                "is_synthetic_account",
+            ],
+        )
+
+        object.__setattr__(
+            self,
             "all_columns",
             self.id_columns
             + self.numerical_features
             + self.categorical_features
+            + self.metadata_columns
             + [self.target_column],
         )
 

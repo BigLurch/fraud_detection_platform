@@ -7,6 +7,8 @@
 from pathlib import Path
 
 import joblib
+import mlflow
+import mlflow.sklearn
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -20,6 +22,7 @@ DATA_PATH = "data/processed/train_ready.csv"
 MODEL_PATH = "artifacts/models/fraud_model.joblib"
 TARGET = "is_fraud"
 RANDOM_SEED = 42
+EXPERIMENT_NAME = "fraud_detection_experiments"
 
 
 def load_data(path: str = DATA_PATH):
@@ -27,7 +30,14 @@ def load_data(path: str = DATA_PATH):
 
 
 def split_data(df: pd.DataFrame):
-    X = df.drop(columns=[TARGET, "transaction_id", "account_id"])
+    X = df.drop(
+        columns=[
+            TARGET,
+            "transaction_id",
+            "account_id",
+            "is_synthetic_account",
+        ]
+    )
     y = df[TARGET]
 
     return train_test_split(
@@ -70,6 +80,27 @@ def save_model(model, path: str = MODEL_PATH):
     print(f"Model saved to {path}")
 
 
+def setup_mlflow():
+    mlflow.set_tracking_uri("file:./mlruns")
+    mlflow.set_experiment(EXPERIMENT_NAME)
+
+
+def log_params():
+    mlflow.log_params(
+        {
+            "model_type": "RandomForestClassifier",
+            "n_estimators": 200,
+            "max_depth": 10,
+            "min_samples_split": 5,
+            "min_samples_leaf": 2,
+            "class_weight": "balanced",
+            "test_size": 0.2,
+            "random_seed": RANDOM_SEED,
+            "dataset_path": DATA_PATH,
+        }
+    )
+
+
 def main():
     print("Loading data...")
     df = load_data()
@@ -80,14 +111,34 @@ def main():
     print("Building pipeline...")
     pipeline = build_pipeline()
 
-    print("Training model...")
-    pipeline.fit(X_train, y_train)
+    print("Setting up MLflow...")
+    setup_mlflow()
 
-    print("Evaluating model...")
-    metrics = evaluate_model(pipeline, X_test, y_test)
+    with mlflow.start_run():
+        print("Logging parameters to MLflow...")
+        log_params()
 
-    save_metrics(metrics)
-    save_model(pipeline)
+        print("Training model...")
+        pipeline.fit(X_train, y_train)
+
+        print("Evaluating model...")
+        metrics = evaluate_model(pipeline, X_test, y_test)
+
+        print("Logging metrics to MLflow...")
+        mlflow.log_metrics(metrics)
+
+        print("Saving metrics locally...")
+        save_metrics(metrics)
+
+        print("Saving model locally...")
+        save_model(pipeline)
+
+        print("Logging artifacts to MLflow...")
+        mlflow.log_artifact("artifacts/metrics/train_metrics.json")
+        mlflow.sklearn.log_model(
+            sk_model=pipeline,
+            artifact_path="model",
+        )
 
     print("\nTraining complete.")
 
