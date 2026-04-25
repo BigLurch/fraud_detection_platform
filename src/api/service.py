@@ -11,6 +11,7 @@ import pandas as pd
 
 from src.api.schemas import TransactionRequest
 from src.features.build_features import create_features
+from src.api.logger import log_prediction
 
 
 MODEL_PATH = "artifacts/models/fraud_model.joblib"
@@ -60,8 +61,15 @@ def predict_transaction(payload: TransactionRequest) -> dict:
     prediction = int(fraud_probability >= 0.5)
     risk_label = get_risk_label(fraud_probability)
 
-    return {
+    prediction_result = {
         "prediction": prediction,
         "fraud_probability": round(fraud_probability, 4),
         "risk_label": risk_label,
     }
+
+    log_prediction(
+        payload=payload.model_dump(),
+        prediction_result=prediction_result,
+    )
+
+    return prediction_result
