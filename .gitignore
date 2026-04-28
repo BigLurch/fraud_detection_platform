@@ -27,17 +27,21 @@ Thumbs.db
 # Environment files
 .env
 
-# Artifacts
-artifacts/models/*
-artifacts/metrics/*
-artifacts/reports/*
-artifacts/logs/*
+# Ignore artifacts by default
+artifacts/*
+
+# Keep model folder
+!artifacts/models/
+
+# Keep deployed model
+!artifacts/models/fraud_model.joblib
 
 # Keep folder structure
 !artifacts/models/.gitkeep
 !artifacts/metrics/.gitkeep
 !artifacts/reports/.gitkeep
 !artifacts/logs/.gitkeep
+
 
 # Data
 data/raw/*
