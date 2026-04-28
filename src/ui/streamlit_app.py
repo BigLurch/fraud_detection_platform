@@ -222,7 +222,11 @@ def main() -> None:
         "Modern payment fraud detection demo with FastAPI, MLflow, prediction logging and Streamlit."
     )
 
-    st_autorefresh(interval=3000, key="fraud_dashboard_refresh")
+    auto_refresh = st.sidebar.toggle("Auto-refresh dashboard", value=False)
+
+    if auto_refresh:
+        st.sidebar.caption("Refreshing every 10 seconds")
+        st_autorefresh(interval=10000, key="fraud_dashboard_refresh")
 
     logs_df = load_prediction_logs()
 
