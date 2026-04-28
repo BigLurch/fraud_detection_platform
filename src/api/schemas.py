@@ -24,6 +24,7 @@ class TransactionRequest(BaseModel):
     shipping_billing_mismatch: str
     kyc_completed: str
     has_chargeback_history: str
+    source: str = "manual"
 
 
 class PredictionResponse(BaseModel):

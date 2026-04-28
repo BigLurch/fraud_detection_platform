@@ -24,3 +24,17 @@ services:
     volumes:
       - ../artifacts:/app/artifacts
       - ../data:/app/data
+
+  simulator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: fraud_simulator
+    depends_on:
+      - api
+    environment:
+      - API_URL=http://api:8000/predict
+    command: ["python", "scripts/simulate_transactions.py"]
+    volumes:
+      - ../artifacts:/app/artifacts
+      - ../data:/app/data

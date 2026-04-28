@@ -11,6 +11,8 @@ import os
 import pandas as pd
 import requests
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
+import pydeck as pdk
 
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/predict")
@@ -45,20 +47,20 @@ def get_preset(name: str) -> dict:
             "has_chargeback_history": "no",
         },
         "medium": {
-            "user_age": 31,
-            "account_age_days": 45,
-            "transaction_amount": 4200.0,
-            "transaction_hour": 23,
-            "ip_risk_score": 0.55,
+            "user_age": 34,
+            "account_age_days": 140,
+            "transaction_amount": 2850.0,
+            "transaction_hour": 21,
+            "ip_risk_score": 0.49,
             "num_prev_transactions_24h": 5,
-            "avg_transaction_amount_7d": 900.0,
-            "failed_login_attempts_24h": 2,
+            "avg_transaction_amount_7d": 1350.0,
+            "failed_login_attempts_24h": 4,
             "email_domain": "outlook.com",
-            "device_type": "desktop",
+            "device_type": "mobile",
             "payment_method": "card",
-            "country": "Poland",
+            "country": "Germany",
             "is_foreign_transaction": "yes",
-            "shipping_billing_mismatch": "yes",
+            "shipping_billing_mismatch": "no",
             "kyc_completed": "yes",
             "has_chargeback_history": "no",
         },
@@ -128,6 +130,86 @@ def render_risk_result(result: dict) -> None:
     else:
         st.success(f"✅ LOW RISK • {probability:.2%} fraud probability")
 
+def render_fraud_map(logs_df: pd.DataFrame) -> None:
+    st.subheader("Transaction Origin Map")
+
+    if logs_df.empty or "lat" not in logs_df.columns or "lon" not in logs_df.columns:
+        st.info("No geolocation data available yet.")
+        return
+
+    map_df = logs_df.dropna(subset=["lat", "lon"]).copy()
+
+    if map_df.empty:
+        st.info("No valid map points available yet.")
+        return
+
+    map_df["risk_label"] = map_df["risk_label"].fillna("low").str.lower()
+    map_df["source"] = map_df.get("source", "manual")
+    map_df["is_manual"] = map_df["source"].eq("manual")
+
+    def get_fill_color(risk_label: str) -> list[int]:
+        if risk_label == "high":
+            return [255, 40, 40, 180]
+        if risk_label == "medium":
+            return [255, 165, 0, 180]
+        return [40, 200, 90, 180]
+
+    def get_line_color(is_manual: bool) -> list[int]:
+        if is_manual:
+            return [66, 21, 234, 255]
+        return [255, 255, 255, 0]
+
+    map_df["color"] = map_df["risk_label"].apply(get_fill_color)
+    map_df["line_color"] = map_df["is_manual"].apply(get_line_color)
+    map_df["radius"] = 12000
+    map_df["line_width"] = map_df["is_manual"].apply(lambda x: 3000 if x else 0)
+
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=map_df,
+        get_position="[lon, lat]",
+        get_fill_color="color",
+        get_line_color="line_color",
+        get_radius="radius",
+        get_line_width="line_width",
+        stroked=True,
+        filled=True,
+        pickable=True,
+        opacity=0.85,
+    )
+
+    view_state = pdk.ViewState(
+        latitude=50.5,
+        longitude=14.0,
+        zoom=3,
+        pitch=25,
+    )
+
+    deck = pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state,
+        tooltip={
+            "html": """
+                <b>Country:</b> {country}<br/>
+                <b>City:</b> {city}<br/>
+                <b>Risk:</b> {risk_label}<br/>
+                <b>Source:</b> {source}<br/>
+                <b>Amount:</b> {transaction_amount}<br/>
+                <b>Fraud probability:</b> {fraud_probability}
+            """,
+            "style": {
+                "backgroundColor": "#111827",
+                "color": "white",
+            },
+        },
+    )
+
+    st.pydeck_chart(deck, use_container_width=True)
+
+    st.caption(
+        "Map colors: green = low risk, orange = medium risk, red = high risk. "
+        "Blue border = manual UI prediction."
+    )
 
 def selectbox_with_preset(label: str, options: list[str], preset_value: str) -> str:
     index = options.index(preset_value) if preset_value in options else 0
@@ -139,6 +221,8 @@ def main() -> None:
     st.caption(
         "Modern payment fraud detection demo with FastAPI, MLflow, prediction logging and Streamlit."
     )
+
+    st_autorefresh(interval=3000, key="fraud_dashboard_refresh")
 
     logs_df = load_prediction_logs()
 
@@ -300,6 +384,7 @@ def main() -> None:
         "shipping_billing_mismatch": shipping_billing_mismatch,
         "kyc_completed": kyc_completed,
         "has_chargeback_history": has_chargeback_history,
+        "source": "manual",
     }
 
     st.divider()
@@ -317,6 +402,12 @@ def main() -> None:
 
     st.divider()
 
+    logs_df = load_prediction_logs()
+
+    render_fraud_map(logs_df)
+
+    st.divider()
+
     st.subheader("Recent Prediction Logs")
 
     logs_df = load_prediction_logs()
@@ -326,8 +417,9 @@ def main() -> None:
     else:
         display_columns = [
             "timestamp",
-            "transaction_amount",
             "country",
+            "city",
+            "transaction_amount",
             "ip_risk_score",
             "fraud_probability",
             "risk_label",

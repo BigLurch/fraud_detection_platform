@@ -39,7 +39,10 @@ def get_risk_label(probability: float) -> str:
 
 
 def predict_transaction(payload: TransactionRequest) -> dict:
-    input_data = pd.DataFrame([payload.model_dump()])
+    payload_dict = payload.model_dump()
+    source = payload_dict.pop("source", "manual")
+
+    input_data = pd.DataFrame([payload_dict])
 
     input_data["transaction_id"] = "API_REQUEST"
     input_data["account_id"] = "API_ACCOUNT"
@@ -68,7 +71,7 @@ def predict_transaction(payload: TransactionRequest) -> dict:
     }
 
     log_prediction(
-        payload=payload.model_dump(),
+        payload={**payload_dict, "source": source},
         prediction_result=prediction_result,
     )
 
