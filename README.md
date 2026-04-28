@@ -1,160 +1,258 @@
 # Fraud Detection Platform
 
-An end-to-end MLOps portfolio project that simulates fraud activity in a modern digital payment platform.
+Production-style end-to-end MLOps project for real-time fraud detection in a modern digital payment platform.
 
-The system generates synthetic transactions and fake accounts, trains a machine learning model to detect fraud, serves predictions through FastAPI, provides a Streamlit dashboard, logs predictions, and monitors model/data drift over time.
+This platform simulates live payment traffic, detects fraudulent transactions using machine learning, exposes predictions through FastAPI, visualizes risk events in a Streamlit dashboard, tracks experiments with MLflow, monitors drift with Evidently, and runs fully containerized with Docker.
 
----
 
-# Project Vision
+# Project Overview
 
-This project is designed to feel like a real fraud prevention product used in a modern checkout or payment environment.
+Fraud detection is one of the most valuable machine learning use cases in fintech and e-commerce.
 
-It combines two perspectives:
+This project was built to simulate how a modern payment company could:
 
-## Payment Platform
+- score incoming transactions in real time
+- detect suspicious account behavior
+- monitor fraud activity globally
+- track model performance over time
+- deploy and maintain an ML system in production
 
-* customer transactions
-* payment risk scoring
-* account abuse prevention
-* real-time fraud checks
+The focus is not only the model — but the **full ML lifecycle**.
 
-## Fraud Intelligence Dashboard
 
-* suspicious activity alerts
-* transaction monitoring
-* risk trends
-* geolocation visualizations
-* model health monitoring
+# Key Features
 
----
+## Real-Time Fraud Detection API
 
-# Current Development Status
+- FastAPI prediction endpoint
+- fraud probability scoring
+- low / medium / high risk labels
+- health check endpoint
+- JSON responses for easy integration
 
-## Completed
+## Synthetic Fraud Traffic Simulator
 
-### Project Foundation
+- generates continuous live transactions
+- realistic customer behavior
+- suspicious scenarios
+- fraud attack patterns
+- sends traffic directly to API
 
-* professional project structure
-* uv virtual environment setup
-* modular Python package layout
-* config-driven architecture
+## Interactive Fraud Dashboard
 
-### Synthetic Data Engine
+Built with Streamlit.
 
-* realistic payment transaction simulation
-* legitimate customer behavior patterns
-* synthetic / fake account abuse scenarios
-* suspicious purchase behavior
-* fraud labels for supervised learning
+Includes:
 
-### Data Quality Layer
-
-* schema definition
-* dataset validation checks
-* null / duplicate / range validation
-
-### Feature Engineering
-
-Created model-ready features such as:
-
-* amount_to_avg_ratio
-* is_night_transaction
-* high_velocity_flag
-* new_account_flag
-* risky_email_domain
-* foreign_high_amount_flag
-* login_risk_flag
-
----
-
-# Planned Next Steps
+- live fraud alerts
+- KPI metrics
+- recent transaction feed
+- real-time geolocation fraud map
+- manual fraud testing controls
+- highlighted manual events
 
 ## Machine Learning Pipeline
 
-* preprocessing pipeline
-* train / test split
-* RandomForest baseline model
-* model evaluation
-* saved artifacts
+- synthetic training dataset generation
+- preprocessing pipeline
+- feature engineering
+- train / test split
+- RandomForest fraud classifier
+- saved model artifacts
 
-## MLOps Layer
+## Experiment Tracking
 
-* MLflow experiment tracking
-* model versioning
-* inference logging
-* Evidently monitoring
+Using MLflow:
 
-## Serving Layer
+- parameters
+- metrics
+- model versions
+- artifacts
 
-* FastAPI prediction API
-* batch inference endpoint
-* health checks
+## Monitoring
 
-## UI Dashboard
+Using Evidently:
 
-* Streamlit fraud console
-* live prediction view
-* recent alerts
-* world fraud activity map
-* model monitoring panel
+- data drift detection
+- feature drift reporting
+- production monitoring reports
 
-## Deployment
+## Engineering / DevOps
 
-* Docker
-* docker-compose
-* GitHub Actions CI
+- Docker + Docker Compose
+- pytest test suite
+- GitHub Actions CI pipeline
+- modular production-style structure
 
----
 
-# Example Use Cases
+# Example Fraud Signals
 
-The model will learn to detect scenarios such as:
+The model learns to detect patterns such as:
 
-* new account making large foreign purchase
-* multiple failed login attempts followed by payment
-* synthetic identity using risky email domain
-* sudden high-value purchase outside normal behavior
-* high velocity transactions in short timeframe
+- new account making high-value foreign purchase
+- many failed logins before payment
+- suspicious email domain
+- high transaction velocity
+- billing / shipping mismatch
+- unusually high purchase amount
+- risky IP behavior
 
----
+
+# ML Performance
+
+Example latest run:
+
+```json
+{
+  "precision": 0.9857,
+  "recall": 0.8625,
+  "f1_score": 0.9200,
+  "roc_auc": 0.9938
+}
+```
+
+Strong fraud detection performance with balanced precision and recall.
+
+
+# System Architecture
+
+```text
+Live Simulator
+      ↓
+ FastAPI API
+      ↓
+ Fraud Model
+      ↓
+Prediction Logs
+      ↓
+Streamlit Dashboard
+      ↓
+Evidently Monitoring
+```
+
 
 # Tech Stack
 
-* Python 3.11
-* pandas
-* numpy
-* scikit-learn
-* FastAPI
-* Streamlit
-* MLflow
-* Evidently
-* pytest
-* Docker
+## Core
+- Python 3.11
+- pandas
+- numpy
+- scikit-learn
+## Serving
+- FastAPI
+- Uvicorn
+## Frontend
+- Streamlit
+- PyDeck Maps
+## MLOps
+- MLflow
+- Evidently
+## Engineering
+- pytest
+- GitHub Actions
+- Docker
+- Docker Compose
 
----
+
+# Run Locally
+
+## Clone repo
+
+```bash
+git clone https://github.com/BigLurch/fraud_detection_platform.git
+cd fraud_detection_platform
+```
+
+## Start with Docker
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
+
+
+# Local URLs
+
+## Dashboard
+
+```text
+http://localhost:8501
+```
+
+## API Docs
+
+```text
+http://localhost:8000/docs
+```
+
+
+# Run Tests
+
+```bash
+uv run pytest -v
+```
+
+
+# CI/CD
+
+Every push automatically runs:
+- dependency install
+- dataset generation
+- feature pipeline
+- model training
+- pytest suite
+
+Configured through GitHub Actions.
+
 
 # Repository Structure
 
 ```text
 fraud_detection_platform/
 ├── artifacts/
+│   ├── logs/
+│   ├── metrics/
+│   ├── models/
+│   └── reports/
 ├── configs/
 ├── data/
 ├── docker/
 ├── notebooks/
 ├── scripts/
 ├── src/
+│   ├── api/
+│   ├── data/
+│   ├── features/
+│   ├── models/
+│   ├── monitoring/
+│   └── ui/
 ├── tests/
 └── README.md
 ```
 
+
 # Why This Project Matters
 
-This project demonstrates practical skills for roles such as:
-* MLOps Engineer
-* Machine Learning Engineer
-* AI Engineer
-* Data / ML Platform Engineer
+This project demonstrates practical skills relevant for roles such as:
+- MLOps Engineer
+- Machine Learning Engineer
+- AI Engineer
+- ML Platform Engineer
+- Backend Engineer (AI systems)
 
-It focuses not only on model training, but on the full lifecycle of machine learning systems.
+It shows ability to build not only models — but complete, production-style machine learning systems.
+
+
+# Future Improvements
+
+- cloud deployment (Render / AWS / GCP)
+- PostgreSQL prediction storage
+- Kafka live event streaming
+- automated retraining pipeline
+- alert notifications
+- role-based analyst dashboard
+- advanced anomaly detection models
+
+
+# Author
+
+Built and designed by **Jonas Johansson** as a portfolio project focused on production-grade ML systems, fraud detection, and MLOps engineering.
