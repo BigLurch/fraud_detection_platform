@@ -11,3 +11,4 @@ evidently
 pyyaml
 python-dotenv
 streamlit-autorefresh
+psycopg2-binary

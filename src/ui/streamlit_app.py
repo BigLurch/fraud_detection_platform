@@ -7,6 +7,7 @@
 import json
 from pathlib import Path
 import os
+import psycopg2
 
 import pandas as pd
 import requests
@@ -17,7 +18,7 @@ import pydeck as pdk
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/predict")
 LOG_PATH = "artifacts/logs/predictions.jsonl"
-
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 st.set_page_config(
     page_title="Fraud Detection Platform",
@@ -88,6 +89,54 @@ def get_preset(name: str) -> dict:
 
 
 def load_prediction_logs(path: str = LOG_PATH) -> pd.DataFrame:
+    if DATABASE_URL:
+        return load_prediction_logs_from_database()
+
+    return load_prediction_logs_from_jsonl(path)
+
+
+def load_prediction_logs_from_database(limit: int = 500) -> pd.DataFrame:
+    query = """
+    SELECT
+        timestamp,
+        source,
+        is_manual,
+        user_age,
+        account_age_days,
+        transaction_amount,
+        transaction_hour,
+        ip_risk_score,
+        num_prev_transactions_24h,
+        avg_transaction_amount_7d,
+        failed_login_attempts_24h,
+        email_domain,
+        device_type,
+        payment_method,
+        country,
+        city,
+        lat,
+        lon,
+        is_foreign_transaction,
+        shipping_billing_mismatch,
+        kyc_completed,
+        has_chargeback_history,
+        prediction,
+        fraud_probability,
+        risk_label
+    FROM prediction_logs
+    ORDER BY timestamp DESC
+    LIMIT %s;
+    """
+
+    try:
+        with psycopg2.connect(DATABASE_URL) as conn:
+            return pd.read_sql_query(query, conn, params=(limit,))
+    except Exception as error:
+        st.warning(f"Could not load prediction logs from database: {error}")
+        return pd.DataFrame()
+
+
+def load_prediction_logs_from_jsonl(path: str = LOG_PATH) -> pd.DataFrame:
     log_path = Path(path)
 
     if not log_path.exists():

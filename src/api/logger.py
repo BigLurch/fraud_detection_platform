@@ -4,12 +4,17 @@
 # which can later be used for monitoring, dashboards, and drift analysis.
 
 import json
+import os
 import random
 from datetime import datetime, timezone
 from pathlib import Path
 
+import psycopg2
+from psycopg2.extras import Json
+
 
 LOG_PATH = "artifacts/logs/predictions.jsonl"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 COUNTRY_CITY_COORDINATES = {
@@ -63,11 +68,7 @@ COUNTRY_CITY_COORDINATES = {
 
 
 def get_coordinates(country: str) -> dict:
-    cities = COUNTRY_CITY_COORDINATES.get(
-        country,
-        COUNTRY_CITY_COORDINATES["Sweden"],
-    )
-
+    cities = COUNTRY_CITY_COORDINATES.get(country, COUNTRY_CITY_COORDINATES["Sweden"])
     city = random.choice(cities)
 
     return {
@@ -77,10 +78,126 @@ def get_coordinates(country: str) -> dict:
     }
 
 
-def log_prediction(payload: dict, prediction_result: dict, path: str = LOG_PATH) -> None:
+def create_predictions_table() -> None:
+    if not DATABASE_URL:
+        return
+
+    create_sql = """
+    CREATE TABLE IF NOT EXISTS prediction_logs (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMPTZ NOT NULL,
+        source TEXT,
+        is_manual BOOLEAN,
+        user_age INTEGER,
+        account_age_days INTEGER,
+        transaction_amount DOUBLE PRECISION,
+        transaction_hour INTEGER,
+        ip_risk_score DOUBLE PRECISION,
+        num_prev_transactions_24h INTEGER,
+        avg_transaction_amount_7d DOUBLE PRECISION,
+        failed_login_attempts_24h INTEGER,
+        email_domain TEXT,
+        device_type TEXT,
+        payment_method TEXT,
+        country TEXT,
+        city TEXT,
+        lat DOUBLE PRECISION,
+        lon DOUBLE PRECISION,
+        is_foreign_transaction TEXT,
+        shipping_billing_mismatch TEXT,
+        kyc_completed TEXT,
+        has_chargeback_history TEXT,
+        prediction INTEGER,
+        fraud_probability DOUBLE PRECISION,
+        risk_label TEXT,
+        raw_record JSONB
+    );
+    """
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(create_sql)
+
+
+def log_prediction_to_database(record: dict) -> None:
+    create_predictions_table()
+
+    insert_sql = """
+    INSERT INTO prediction_logs (
+        timestamp,
+        source,
+        is_manual,
+        user_age,
+        account_age_days,
+        transaction_amount,
+        transaction_hour,
+        ip_risk_score,
+        num_prev_transactions_24h,
+        avg_transaction_amount_7d,
+        failed_login_attempts_24h,
+        email_domain,
+        device_type,
+        payment_method,
+        country,
+        city,
+        lat,
+        lon,
+        is_foreign_transaction,
+        shipping_billing_mismatch,
+        kyc_completed,
+        has_chargeback_history,
+        prediction,
+        fraud_probability,
+        risk_label,
+        raw_record
+    )
+    VALUES (
+        %(timestamp)s,
+        %(source)s,
+        %(is_manual)s,
+        %(user_age)s,
+        %(account_age_days)s,
+        %(transaction_amount)s,
+        %(transaction_hour)s,
+        %(ip_risk_score)s,
+        %(num_prev_transactions_24h)s,
+        %(avg_transaction_amount_7d)s,
+        %(failed_login_attempts_24h)s,
+        %(email_domain)s,
+        %(device_type)s,
+        %(payment_method)s,
+        %(country)s,
+        %(city)s,
+        %(lat)s,
+        %(lon)s,
+        %(is_foreign_transaction)s,
+        %(shipping_billing_mismatch)s,
+        %(kyc_completed)s,
+        %(has_chargeback_history)s,
+        %(prediction)s,
+        %(fraud_probability)s,
+        %(risk_label)s,
+        %(raw_record)s
+    );
+    """
+
+    record_for_db = record.copy()
+    record_for_db["raw_record"] = Json(record)
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(insert_sql, record_for_db)
+
+
+def log_prediction_to_jsonl(record: dict, path: str = LOG_PATH) -> None:
     log_path = Path(path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
+    with open(log_path, "a", encoding="utf-8") as file:
+        file.write(json.dumps(record) + "\n")
+
+
+def log_prediction(payload: dict, prediction_result: dict, path: str = LOG_PATH) -> None:
     geolocation = get_coordinates(payload.get("country", "Sweden"))
     source = payload.get("source", "manual")
 
@@ -93,5 +210,7 @@ def log_prediction(payload: dict, prediction_result: dict, path: str = LOG_PATH)
         **prediction_result,
     }
 
-    with open(log_path, "a", encoding="utf-8") as file:
-        file.write(json.dumps(log_record) + "\n")
+    if DATABASE_URL:
+        log_prediction_to_database(log_record)
+    else:
+        log_prediction_to_jsonl(log_record, path)
