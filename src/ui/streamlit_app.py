@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 import os
 import psycopg2
+import random
+import time
 
 import pandas as pd
 import requests
@@ -94,8 +96,49 @@ def load_prediction_logs(path: str = LOG_PATH) -> pd.DataFrame:
 
     return load_prediction_logs_from_jsonl(path)
 
+def ensure_prediction_logs_table() -> None:
+    if not DATABASE_URL:
+        return
+
+    create_sql = """
+    CREATE TABLE IF NOT EXISTS prediction_logs (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMPTZ NOT NULL,
+        source TEXT,
+        is_manual BOOLEAN,
+        user_age INTEGER,
+        account_age_days INTEGER,
+        transaction_amount DOUBLE PRECISION,
+        transaction_hour INTEGER,
+        ip_risk_score DOUBLE PRECISION,
+        num_prev_transactions_24h INTEGER,
+        avg_transaction_amount_7d DOUBLE PRECISION,
+        failed_login_attempts_24h INTEGER,
+        email_domain TEXT,
+        device_type TEXT,
+        payment_method TEXT,
+        country TEXT,
+        city TEXT,
+        lat DOUBLE PRECISION,
+        lon DOUBLE PRECISION,
+        is_foreign_transaction TEXT,
+        shipping_billing_mismatch TEXT,
+        kyc_completed TEXT,
+        has_chargeback_history TEXT,
+        prediction INTEGER,
+        fraud_probability DOUBLE PRECISION,
+        risk_label TEXT,
+        raw_record JSONB
+    );
+    """
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(create_sql)
 
 def load_prediction_logs_from_database(limit: int = 500) -> pd.DataFrame:
+    ensure_prediction_logs_table()
+
     query = """
     SELECT
         timestamp,
@@ -158,6 +201,105 @@ def call_prediction_api(payload: dict) -> dict:
     response = requests.post(API_URL, json=payload, timeout=10)
     response.raise_for_status()
     return response.json()
+
+
+def get_demo_transaction(scenario: str) -> dict:
+    presets = {
+        "legit": {
+            "user_age": random.randint(25, 65),
+            "account_age_days": random.randint(300, 1600),
+            "transaction_amount": round(random.uniform(100, 1200), 2),
+            "transaction_hour": random.randint(8, 20),
+            "ip_risk_score": round(random.uniform(0.02, 0.25), 2),
+            "num_prev_transactions_24h": random.randint(0, 3),
+            "avg_transaction_amount_7d": round(random.uniform(300, 1000), 2),
+            "failed_login_attempts_24h": random.randint(0, 1),
+            "email_domain": random.choice(["gmail.com", "outlook.com", "icloud.com"]),
+            "device_type": random.choice(["mobile", "desktop", "tablet"]),
+            "payment_method": random.choice(["card", "apple_pay", "google_pay"]),
+            "country": random.choice(["Sweden", "Norway", "Denmark", "Finland", "Germany"]),
+            "is_foreign_transaction": "no",
+            "shipping_billing_mismatch": "no",
+            "kyc_completed": "yes",
+            "has_chargeback_history": "no",
+            "source": "demo_button",
+        },
+        "suspicious": {
+            "user_age": random.randint(20, 55),
+            "account_age_days": random.randint(20, 180),
+            "transaction_amount": round(random.uniform(1500, 5500), 2),
+            "transaction_hour": random.choice([0, 1, 2, 3, 22, 23]),
+            "ip_risk_score": round(random.uniform(0.40, 0.70), 2),
+            "num_prev_transactions_24h": random.randint(3, 7),
+            "avg_transaction_amount_7d": round(random.uniform(500, 1500), 2),
+            "failed_login_attempts_24h": random.randint(1, 3),
+            "email_domain": random.choice(["gmail.com", "outlook.com", "tempmail.io"]),
+            "device_type": random.choice(["mobile", "desktop"]),
+            "payment_method": random.choice(["card", "bank_transfer"]),
+            "country": random.choice(["Poland", "Romania", "Germany", "Netherlands"]),
+            "is_foreign_transaction": random.choice(["yes", "no"]),
+            "shipping_billing_mismatch": random.choice(["yes", "no"]),
+            "kyc_completed": random.choice(["yes", "no"]),
+            "has_chargeback_history": random.choice(["yes", "no"]),
+            "source": "demo_button",
+        },
+        "fraud": {
+            "user_age": random.randint(18, 45),
+            "account_age_days": random.randint(1, 30),
+            "transaction_amount": round(random.uniform(5000, 12000), 2),
+            "transaction_hour": random.choice([0, 1, 2, 3, 4, 23]),
+            "ip_risk_score": round(random.uniform(0.75, 0.98), 2),
+            "num_prev_transactions_24h": random.randint(6, 14),
+            "avg_transaction_amount_7d": round(random.uniform(300, 1000), 2),
+            "failed_login_attempts_24h": random.randint(3, 8),
+            "email_domain": random.choice(["tempmail.io", "burnermail.xyz", "quickdrop.cc"]),
+            "device_type": random.choice(["desktop", "mobile"]),
+            "payment_method": random.choice(["card", "bank_transfer"]),
+            "country": random.choice(["Nigeria", "Turkey", "Romania", "Poland"]),
+            "is_foreign_transaction": "yes",
+            "shipping_billing_mismatch": "yes",
+            "kyc_completed": "no",
+            "has_chargeback_history": random.choice(["yes", "no"]),
+            "source": "demo_button",
+        },
+    }
+
+    return presets[scenario]
+
+
+def choose_demo_scenario() -> str:
+    return random.choices(
+        population=["legit", "suspicious", "fraud"],
+        weights=[0.70, 0.20, 0.10],
+        k=1,
+    )[0]
+
+
+def generate_demo_traffic(n_transactions: int = 25) -> tuple[int, int]:
+    success_count = 0
+    error_count = 0
+
+    progress = st.progress(0)
+    status = st.empty()
+
+    for index in range(n_transactions):
+        scenario = choose_demo_scenario()
+        payload = get_demo_transaction(scenario)
+
+        try:
+            call_prediction_api(payload)
+            success_count += 1
+        except requests.exceptions.RequestException:
+            error_count += 1
+
+        progress.progress((index + 1) / n_transactions)
+        status.caption(f"Generated {index + 1}/{n_transactions} demo transactions")
+        time.sleep(0.05)
+
+    progress.empty()
+    status.empty()
+
+    return success_count, error_count
 
 
 def render_risk_result(result: dict) -> None:
@@ -268,7 +410,8 @@ def selectbox_with_preset(label: str, options: list[str], preset_value: str) -> 
 def main() -> None:
     st.title("🛡️ Fraud Detection Platform")
     st.caption(
-        "Modern payment fraud detection demo with FastAPI, MLflow, prediction logging and Streamlit."
+        "Map colors: green = low risk, orange = medium risk, red = high risk. "
+        "Blue border = manually submitted transaction."
     )
 
     auto_refresh = st.sidebar.toggle("Auto-refresh dashboard", value=False)
@@ -291,6 +434,20 @@ def main() -> None:
         if not logs_df.empty
         else "0%",
     )
+
+    demo_col1, demo_col2 = st.columns([1, 4])
+
+    with demo_col1:
+        if st.button("Generate Demo Traffic", type="secondary"):
+            success_count, error_count = generate_demo_traffic(25)
+
+            if error_count == 0:
+                st.success(f"Generated {success_count} demo transactions.")
+            else:
+                st.warning(
+                    f"Generated {success_count} transactions, "
+                    f"but {error_count} requests failed."
+                )
 
     st.divider()
 
