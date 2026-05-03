@@ -30,12 +30,20 @@ st.set_page_config(
 )
 
 
-def wake_up_api() -> bool:
-    try:
-        response = requests.get(API_HEALTH_URL, timeout=20)
-        return response.status_code == 200
-    except requests.exceptions.RequestException:
-        return False
+def wake_up_api(max_attempts: int = 6) -> bool:
+    for attempt in range(max_attempts):
+        try:
+            response = requests.get(API_HEALTH_URL, timeout=15)
+
+            if response.status_code == 200:
+                return True
+
+        except requests.exceptions.RequestException:
+            pass
+
+        time.sleep(10)
+
+    return False
 
 
 def get_preset(name: str) -> dict:
@@ -423,13 +431,13 @@ def main() -> None:
         "Blue border = manually submitted transaction."
     )
 
-    with st.spinner("Starting backend API..."):
+    with st.spinner("Starting backend API. This can take up to a minute on Render Free..."):
         api_ready = wake_up_api()
 
     if not api_ready:
         st.warning(
-            "Backend API is starting up. This can take up to a minute on Render Free. "
-            "Please wait a moment and refresh the page."
+            "Backend API is still starting or could not be reached. "
+            "Please wait a moment and refresh the dashboard."
         )
 
     st_autorefresh(interval=7000, key="fraud_dashboard_refresh")
