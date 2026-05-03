@@ -16,6 +16,7 @@ import requests
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 import pydeck as pdk
+import streamlit.components.v1 as components
 
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/predict").strip()
@@ -45,6 +46,20 @@ def wake_up_api(max_attempts: int = 8) -> bool:
         time.sleep(10)
 
     return False
+
+
+def wake_up_api_from_browser() -> None:
+    components.html(
+        f"""
+        <iframe
+            src="{API_HEALTH_URL}"
+            style="display:none;"
+            width="0"
+            height="0">
+        </iframe>
+        """,
+        height=0,
+    )
 
 
 def get_preset(name: str) -> dict:
@@ -431,6 +446,8 @@ def main() -> None:
         "Map colors: green = low risk, orange = medium risk, red = high risk. "
         "Blue border = manually submitted transaction."
     )
+
+    wake_up_api_from_browser()
 
     with st.sidebar.expander("Debug"):
         st.write("API_URL:", API_URL)
