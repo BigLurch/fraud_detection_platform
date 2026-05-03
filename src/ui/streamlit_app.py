@@ -19,6 +19,7 @@ import pydeck as pdk
 
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/predict")
+API_HEALTH_URL = API_URL.replace("/predict", "/health")
 LOG_PATH = "artifacts/logs/predictions.jsonl"
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -27,6 +28,14 @@ st.set_page_config(
     page_icon="🛡️",
     layout="wide",
 )
+
+
+def wake_up_api() -> bool:
+    try:
+        response = requests.get(API_HEALTH_URL, timeout=20)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
 
 
 def get_preset(name: str) -> dict:
@@ -414,11 +423,16 @@ def main() -> None:
         "Blue border = manually submitted transaction."
     )
 
-    auto_refresh = st.sidebar.toggle("Auto-refresh dashboard", value=False)
+    with st.spinner("Starting backend API..."):
+        api_ready = wake_up_api()
 
-    if auto_refresh:
-        st.sidebar.caption("Refreshing every 10 seconds")
-        st_autorefresh(interval=10000, key="fraud_dashboard_refresh")
+    if not api_ready:
+        st.warning(
+            "Backend API is starting up. This can take up to a minute on Render Free. "
+            "Please wait a moment and refresh the page."
+        )
+
+    st_autorefresh(interval=7000, key="fraud_dashboard_refresh")
 
     logs_df = load_prediction_logs()
 
