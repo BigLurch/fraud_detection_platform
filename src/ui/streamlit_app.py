@@ -14,7 +14,6 @@ import time
 import pandas as pd
 import requests
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
 import pydeck as pdk
 import streamlit.components.v1 as components
 
@@ -465,8 +464,6 @@ def main() -> None:
             "Please wait a moment and refresh the dashboard."
         )
 
-    st_autorefresh(interval=10000, key="fraud_dashboard_refresh")
-
     logs_df = load_prediction_logs()
 
     k1, k2, k3 = st.columns(3)
@@ -482,10 +479,57 @@ def main() -> None:
         else "0%",
     )
 
-    demo_col1, demo_col2 = st.columns([1, 4])
+    st.divider()
 
-    with demo_col1:
-        if st.button("Generate Demo Traffic", type="secondary"):
+    map_col, logs_col = st.columns([1.25, 1])
+
+    with map_col:
+        render_fraud_map(logs_df)
+
+    with logs_col:
+        st.subheader("Recent Prediction Logs")
+
+        if logs_df.empty:
+            st.info("No prediction logs found yet. Run a fraud check or generate demo traffic.")
+        else:
+            display_columns = [
+                "timestamp",
+                "country",
+                "city",
+                "transaction_amount",
+                "ip_risk_score",
+                "fraud_probability",
+                "risk_label",
+                "prediction",
+            ]
+
+            available_columns = [
+                col for col in display_columns if col in logs_df.columns
+            ]
+
+            st.dataframe(
+                logs_df[available_columns].head(15),
+                use_container_width=True,
+                height=500,
+            )
+
+    st.divider()
+
+    st.subheader("Quick Scenarios")
+
+    p1, p2, p3, p4 = st.columns(4)
+
+    if p1.button("✅ Legit Customer"):
+        st.session_state["preset"] = get_preset("legit")
+
+    if p2.button("⚠️ Suspicious Attempt"):
+        st.session_state["preset"] = get_preset("medium")
+
+    if p3.button("🚨 High Risk Attack"):
+        st.session_state["preset"] = get_preset("high")
+
+    with p4:
+        if st.button("⚡ Generate Demo Traffic"):
             success_count, error_count = generate_demo_traffic(25)
 
             if error_count == 0:
@@ -496,20 +540,8 @@ def main() -> None:
                     f"but {error_count} requests failed."
                 )
 
-    st.divider()
-
-    st.subheader("Quick Scenarios")
-
-    p1, p2, p3 = st.columns(3)
-
-    if p1.button("✅ Legit Customer"):
-        st.session_state["preset"] = get_preset("legit")
-
-    if p2.button("⚠️ Suspicious Attempt"):
-        st.session_state["preset"] = get_preset("medium")
-
-    if p3.button("🚨 High Risk Attack"):
-        st.session_state["preset"] = get_preset("high")
+            time.sleep(1)
+            st.rerun()
 
     preset = st.session_state.get("preset", get_preset("legit"))
 
@@ -650,46 +682,16 @@ def main() -> None:
         try:
             result = call_prediction_api(payload)
             render_risk_result(result)
+
+            time.sleep(1)
+            st.rerun()
+
         except requests.exceptions.ConnectionError:
             st.error(
                 "Could not connect to FastAPI. Make sure the API is running on port 8000."
             )
         except requests.exceptions.RequestException as error:
             st.error(f"Prediction request failed: {error}")
-
-    st.divider()
-
-    logs_df = load_prediction_logs()
-
-    render_fraud_map(logs_df)
-
-    st.divider()
-
-    st.subheader("Recent Prediction Logs")
-
-    logs_df = load_prediction_logs()
-
-    if logs_df.empty:
-        st.info("No prediction logs found yet. Run a fraud check to create logs.")
-    else:
-        display_columns = [
-            "timestamp",
-            "country",
-            "city",
-            "transaction_amount",
-            "ip_risk_score",
-            "fraud_probability",
-            "risk_label",
-            "prediction",
-        ]
-
-        available_columns = [col for col in display_columns if col in logs_df.columns]
-
-        st.dataframe(
-            logs_df[available_columns].tail(10).sort_index(ascending=False),
-            use_container_width=True,
-        )
-
 
 if __name__ == "__main__":
     main()
