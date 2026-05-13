@@ -448,10 +448,6 @@ def main() -> None:
 
     wake_up_api_from_browser()
 
-    with st.sidebar.expander("Debug"):
-        st.write("API_URL:", API_URL)
-        st.write("API_HEALTH_URL:", API_HEALTH_URL)
-
     if "api_ready" not in st.session_state:
         with st.spinner(
             "Starting backend API. This can take up to a minute on Render Free..."
