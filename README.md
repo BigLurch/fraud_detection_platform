@@ -4,6 +4,17 @@ Production-style end-to-end MLOps project for real-time fraud detection in a mod
 
 This platform simulates live payment traffic, detects fraudulent transactions using machine learning, exposes predictions through FastAPI, visualizes risk events in a Streamlit dashboard, tracks experiments with MLflow, monitors drift with Evidently, and runs fully containerized with Docker.
 
+## Live Demo
+
+> **Note:** The live demo is hosted on Render's free tier.  
+> Initial startup may take 30–60 seconds if the services are inactive ("cold start").
+
+Dashboard: https://fraud-detection-deshboard.onrender.com
+
+API Docs: https://fraud-detection-api-ehdy.onrender.com/docs
+
+Health Check: https://fraud-detection-api-ehdy.onrender.com/health
+
 
 # Project Overview
 
@@ -18,6 +29,20 @@ This project was built to simulate how a modern payment company could:
 - deploy and maintain an ML system in production
 
 The focus is not only the model — but the **full ML lifecycle**.
+
+## Dashboard preview with monitoring map and prediction logs
+
+![Dashboard](src/images/dashboard.png)
+
+
+## Demo menu
+
+![Map](src/images/quick_scenarios.png)
+
+
+## FastAPI Documentation
+
+![API Docs](src/images/api_docs.png)
 
 
 # Key Features
