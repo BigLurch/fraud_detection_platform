@@ -461,6 +461,13 @@ def main() -> None:
         )
 
     logs_df = load_prediction_logs()
+    
+    if not logs_df.empty and "timestamp" in logs_df.columns:
+        logs_df["timestamp"] = (
+            pd.to_datetime(logs_df["timestamp"], utc=True)
+            .dt.tz_convert("Europe/Stockholm")
+            .dt.strftime("%Y-%m-%d %H:%M:%S")
+        )
 
     k1, k2, k3 = st.columns(3)
     k1.metric("Total Predictions", len(logs_df))
@@ -496,7 +503,6 @@ def main() -> None:
                 "ip_risk_score",
                 "fraud_probability",
                 "risk_label",
-                "prediction",
             ]
 
             available_columns = [

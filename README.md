@@ -55,13 +55,13 @@ The focus is not only the model — but the **full ML lifecycle**.
 - health check endpoint
 - JSON responses for easy integration
 
-## Synthetic Fraud Traffic Simulator
+## Interactive Demo Traffic Generator
 
-- generates continuous live transactions
-- realistic customer behavior
-- suspicious scenarios
-- fraud attack patterns
-- sends traffic directly to API
+- generates realistic synthetic transaction activity
+- simulates both legitimate and fraudulent behavior
+- creates live prediction events for the dashboard
+- populates geolocation monitoring map and logs
+- sends transaction traffic directly to the FastAPI inference API
 
 ## Interactive Fraud Dashboard
 
