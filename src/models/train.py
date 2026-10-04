@@ -144,6 +144,7 @@ def main():
         mlflow.sklearn.log_model(
             sk_model=pipeline,
             artifact_path="model",
+            skops_trusted_types=["sklearn.tree._tree.Tree"],
         )
 
     print("\nTraining complete.")
