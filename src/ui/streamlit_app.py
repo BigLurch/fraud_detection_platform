@@ -438,12 +438,25 @@ def selectbox_with_preset(label: str, options: list[str], preset_value: str) -> 
     index = options.index(preset_value) if preset_value in options else 0
     return st.selectbox(label, options, index=index)
 
+def load_model_metrics() -> dict:
+    metrics_path = Path("artifacts/metrics/train_metrics.json")
+
+    if not metrics_path.exists():
+        return {}
+
+    try:
+        with open(metrics_path, "r") as file:
+            return json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
 
 def main() -> None:
     st.title("🛡️ Fraud Detection Platform")
+
     st.caption(
-        "Map colors: green = low risk, orange = medium risk, red = high risk. "
-        "Blue border = manually submitted transaction."
+        "A production-style fraud detection demo with real-time inference, "
+        "prediction logging, synthetic traffic generation and model monitoring."
     )
 
     wake_up_api_from_browser()
@@ -514,6 +527,44 @@ def main() -> None:
                 use_container_width=True,
                 height=500,
             )
+
+    st.divider()
+
+    st.subheader("Model Evaluation")
+    st.caption(
+        "Performance on a held-out synthetic test set. "
+        "These metrics measure model quality and are separate from "
+        "the live dashboard statistics above."
+    )
+
+    metrics = load_model_metrics()
+
+    if metrics:
+        m1, m2, m3, m4 = st.columns(4)
+
+        m1.metric(
+            "Precision",
+            f"{metrics['precision']:.1%}",
+        )
+        m2.metric(
+            "Recall",
+            f"{metrics['recall']:.1%}",
+        )
+        m3.metric(
+            "F1 Score",
+            f"{metrics['f1_score']:.1%}",
+        )
+        m4.metric(
+            "ROC-AUC",
+            f"{metrics['roc_auc']:.3f}",
+        )
+
+        st.caption(
+            "Dataset: 8,000 synthetic transactions · 10% fraud rate · "
+            "80/20 stratified train/test split"
+        )
+    else:
+        st.info("Model evaluation metrics are not available.")
 
     st.divider()
 
