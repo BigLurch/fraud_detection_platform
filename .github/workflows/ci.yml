@@ -36,6 +36,8 @@ jobs:
           python -m src.features.build_features
 
       - name: Train model for API tests
+        env:
+          MLFLOW_TRACKING_URI: "sqlite:///mlflow.db"
         run: |
           python -m src.models.train
 
